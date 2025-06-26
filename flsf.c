@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <semaphore.h>
 #include <unistd.h>
 
 #define NUM_PHIL 5
@@ -18,10 +19,17 @@ void eat(int phil) {
 }
 
 void take_forks(int phil){
-    pthread_mutex_lock(&mutex);
-    sem_wait(&forks[phil]);
-    sem_wait(&forks[(phil + 1) % NUM_PHIL]);
-    pthread_mutex_unlock(&mutex);
+    if (phil == NUM_PHIL - 1) {  
+        pthread_mutex_lock(&mutex);
+        sem_wait(&forks[(phil + 1) % NUM_PHIL]);
+        sem_wait(&forks[phil]);
+        pthread_mutex_unlock(&mutex);
+    } else {
+        pthread_mutex_lock(&mutex);
+        sem_wait(&forks[phil]);
+        sem_wait(&forks[(phil + 1) % NUM_PHIL]);
+        pthread_mutex_unlock(&mutex);
+    }
 }
 
 void put_forks(int phil){
@@ -56,7 +64,7 @@ int main(){
         pthread_join(phil[i], NULL);
     }
 
-    pthreqad_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&mutex);
     return 0;
 }
 
